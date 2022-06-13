@@ -24,6 +24,12 @@ import (
 	internaljson "sigs.k8s.io/json/internal/golang/encoding/json"
 )
 
+// MarshalZeroChecking marshals an object to JSON, if the object implements IsZero()
+// and omitempty is used, the object is omitted based on the IsZero() return value.
+func MarshalZeroChecking(v interface{}) ([]byte, error) {
+	return internaljson.Marshal(v)
+}
+
 // Decoder describes the decoding API exposed by `encoding/json#Decoder`
 type Decoder interface {
 	Decode(v interface{}) error

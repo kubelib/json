@@ -226,6 +226,12 @@ type Marshaler interface {
 	MarshalJSON() ([]byte, error)
 }
 
+// Zeroer is the interface implemented by types that
+// can provide a function to determine if they are zero.
+type Zeroer interface {
+	IsZero() bool
+}
+
 // An UnsupportedTypeError is returned by Marshal when attempting
 // to encode an unsupported value type.
 type UnsupportedTypeError struct {
@@ -338,7 +344,15 @@ func (e *encodeState) error(err error) {
 	panic(jsonError{err})
 }
 
+var zeroerType = reflect.TypeOf((*Zeroer)(nil)).Elem()
+
 func isEmptyValue(v reflect.Value) bool {
+	if v.Type().Implements(zeroerType) {
+		if v, ok := v.Interface().(Zeroer); ok {
+			return v.IsZero()
+		}
+	}
+
 	switch v.Kind() {
 	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
 		return v.Len() == 0
@@ -352,7 +366,15 @@ func isEmptyValue(v reflect.Value) bool {
 		return v.Float() == 0
 	case reflect.Interface, reflect.Ptr:
 		return v.IsNil()
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			if !isEmptyValue(v.Field(i)) {
+				return false
+			}
+		}
+		return true
 	}
+
 	return false
 }
 

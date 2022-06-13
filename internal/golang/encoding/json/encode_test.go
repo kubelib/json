@@ -14,8 +14,21 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
+	"time"
 	"unicode"
 )
+
+type neverzero int
+
+func (nz neverzero) IsZero() bool {
+	return false
+}
+
+type alwayszero int
+
+func (az alwayszero) IsZero() bool {
+	return true
+}
 
 type Optionals struct {
 	Sr string `json:"sr"`
@@ -42,6 +55,15 @@ type Optionals struct {
 
 	Str struct{} `json:"str"`
 	Sto struct{} `json:"sto,omitempty"`
+
+	Nzr neverzero `json:"nzr"`
+	Nzo neverzero `json:"nzo,omitempty"`
+
+	Azr alwayszero `json:"azr"`
+	Azo alwayszero `json:"azo,omitempty"`
+
+	Tir time.Time `json:"tir"`
+	Tio time.Time `json:"tio,omitempty"`
 }
 
 var optionalsExpected = `{
@@ -53,7 +75,10 @@ var optionalsExpected = `{
  "br": false,
  "ur": 0,
  "str": {},
- "sto": {}
+ "nzr": 0,
+ "nzo": 0,
+ "azr": 0,
+ "tir": "0001-01-01T00:00:00Z"
 }`
 
 func TestOmitEmpty(t *testing.T) {
